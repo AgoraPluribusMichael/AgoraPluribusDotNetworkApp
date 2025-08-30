@@ -179,3 +179,9 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+/ap-website-builder/node_modules
+/ap-website-builder/.astro
+/ap-website-builder/.claude
+/ap-website-builder/.vscode
+/backend/.idea
+/backend/src/sites

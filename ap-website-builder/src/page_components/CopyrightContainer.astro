@@ -1,0 +1,25 @@
+---
+export interface Props {
+  footerText?: string;
+  copyright?: string;
+}
+
+const { footerText, copyright } = Astro.props;
+---
+
+<div id="footer-anchored">
+  <div id="footer-text" class="footer-anchored-text">
+    {footerText ? (
+      <div set:html={footerText} />
+    ) : (
+      <slot name="footer-text" />
+    )}
+  </div>
+  <div id="copyright" class="footer-anchored-text">
+    &copy; {copyright ? (
+      <span set:html={copyright} />
+    ) : (
+      <slot name="copyright" />
+    )}
+  </div>
+</div>

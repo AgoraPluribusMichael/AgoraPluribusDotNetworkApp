@@ -1,0 +1,33 @@
+---
+export interface Props {
+  title: string;
+  gtag?: string;
+}
+
+const { title, gtag } = Astro.props;
+---
+
+<head>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+  <script src="scripts/jquery-3.7.1.min.js"></script>
+  <script src="scripts/bootstrap.min.js"></script>
+  <script src="scripts/menu-offset.js"></script>
+  <script src="scripts/floating-elements.js"></script>
+  <script src="scripts/editor.js"></script>
+  {gtag && (
+    <Fragment>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${gtag}`}></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{gtag}');
+      </script>
+    </Fragment>
+  )}
+</head>

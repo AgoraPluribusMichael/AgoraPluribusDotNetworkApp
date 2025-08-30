@@ -1,0 +1,75 @@
+---
+export interface Props {
+  title: string;
+  gtag?: string;
+  navbar_menu_button?: string;
+  panel_content?: string;
+  name?: string;
+  footer_text?: string;
+  copyright?: string;
+}
+
+const { title, gtag, navbar_menu_button, panel_content, name, footer_text, copyright } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+    <script src="scripts/jquery-3.7.1.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+    <script src="scripts/menu-offset.js"></script>
+    <script src="scripts/floating-elements.js"></script>
+    <script src="scripts/editor.js"></script>
+    {gtag && (
+      <Fragment>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${gtag}`}></script>
+        <script define:vars={{gtag}}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', gtag);
+        </script>
+      </Fragment>
+    )}
+  </head>
+
+  <body>
+    <header>
+      <div id="topbanner">
+        <div id="header-row">
+          <button id="mobile-hamburger" onclick="toggleMenu;">☰</button>
+        </div>
+        <nav id="topbar" class="mobile-hidden fixed">
+          <slot name="navbar-menu-button" />
+        </nav>
+      </div>
+    </header>
+    
+    <main id="main-article" class="content-area container-fluid">
+      <div class="panel" id={`panel_${name}`}>
+        <slot name="panel-content" />
+      </div>
+
+      <div id="footer-anchored">
+        <div id="footer-text" class="footer-anchored-text">
+          <slot name="footer-text" />
+        </div>
+        <div id="copyright" class="footer-anchored-text">
+          &copy; <slot name="copyright" />
+        </div>
+      </div>
+    </main>
+    
+    <footer id="footer">
+      <div id="footer-bar" class="floating">
+        <slot name="footer-text-floating" />
+      </div>
+    </footer>
+  </body>
+</html>

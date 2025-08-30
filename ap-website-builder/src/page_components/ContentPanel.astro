@@ -1,0 +1,16 @@
+---
+export interface Props {
+  name: string;
+  content?: string;
+}
+
+const { name, content } = Astro.props;
+---
+
+<div class="panel" id={`panel_${name}`}>
+  {content ? (
+    <div set:html={content} />
+  ) : (
+    <slot />
+  )}
+</div>
