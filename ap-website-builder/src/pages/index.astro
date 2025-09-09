@@ -134,6 +134,9 @@ export const prerender = false;
               <div class="mb-3">
                 <label for="pageName" class="form-label">Page Name</label>
                 <input type="text" class="form-control" id="pageName" required oninput="validatePageForm()">
+                <small id="pageNameHelp" class="form-text text-muted d-none">
+                  The first page must be named "index" and will serve as your homepage.
+                </small>
               </div>
               <div class="mb-3">
                 <label class="form-label">Select Template</label>
@@ -176,6 +179,7 @@ export const prerender = false;
     import { api } from '/services/api.js';
 
     let currentSiteId = null;
+    let currentSitePages = [];
 
     async function loadSites() {
       try {
@@ -223,6 +227,7 @@ export const prerender = false;
         
         const site = siteResponse.site || siteResponse;
         const pages = pagesResponse.pages || [];
+        currentSitePages = pages; // Store pages for later use
         console.log('Loaded pages:', pages);
         renderPages(pages, site);
         
@@ -404,8 +409,25 @@ export const prerender = false;
     window.createNewPage = function() {
       const modal = new bootstrap.Modal(document.getElementById('createPageModal'));
       modal.show();
-      // Reset form and validation
-      document.getElementById('pageName').value = '';
+      
+      // Check if this is the first page (site has no pages)
+      const pageNameInput = document.getElementById('pageName');
+      const pageNameHelp = document.getElementById('pageNameHelp');
+      
+      if (currentSitePages.length === 0) {
+        // First page must be named "index"
+        pageNameInput.value = 'index';
+        pageNameInput.disabled = true;
+        pageNameInput.setAttribute('readonly', true);
+        pageNameHelp.classList.remove('d-none');
+      } else {
+        // Subsequent pages can have custom names
+        pageNameInput.value = '';
+        pageNameInput.disabled = false;
+        pageNameInput.removeAttribute('readonly');
+        pageNameHelp.classList.add('d-none');
+      }
+      
       document.getElementById('selectedTemplate').value = '';
       // Clear template selections
       document.querySelectorAll('.template-card').forEach(card => {
@@ -429,12 +451,17 @@ export const prerender = false;
     }
 
     window.validatePageForm = function() {
-      const pageName = document.getElementById('pageName').value.trim();
+      const pageNameInput = document.getElementById('pageName');
+      const pageName = pageNameInput.value.trim();
       const selectedTemplate = document.getElementById('selectedTemplate').value;
       const button = document.getElementById('createPageButton');
       
+      // For first page (index), name is always valid since it's hard-coded
+      // For other pages, check if name is provided
+      const isNameValid = pageNameInput.disabled ? true : !!pageName;
+      
       // Enable button only if both name and template are selected
-      button.disabled = !pageName || !selectedTemplate;
+      button.disabled = !isNameValid || !selectedTemplate;
     }
 
     window.submitCreatePage = async function() {

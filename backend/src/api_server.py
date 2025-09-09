@@ -125,9 +125,14 @@ def list_pages(site_id):
 @app.get("/api/v1/sites/<site_id>/pages/<page_id>")
 def get_page(site_id, page_id):
     content = site_manager.get_page_content(site_id, page_id)
+    print(site_id, page_id, content)
     if content is None:
         raise HTTPError(404, "Page not found")
-    return {"content": content}
+    return {
+        "site_id": site_id,
+        "id": page_id,
+        "content": content
+    }
 
 @app.post("/api/v1/sites/<site_id>/pages")
 def create_page(site_id):
@@ -135,14 +140,31 @@ def create_page(site_id):
     page_id = data.get("name")  # Changed from "page_id" to "name"
     template = data.get("template", "")
     
-    if not page_id:
-        raise HTTPError(400, "Page name is required")
+    # Check if site exists and get its pages
+    site = site_manager.get_site(site_id)
+    if not site:
+        raise HTTPError(404, "Site not found")
+    
+    # If site has no pages, force the page name to be "index"
+    if len(site.get("pages", [])) == 0:
+        page_id = "index"
+        # Optionally return a message to inform the user
+        message = "First page must be named 'index'"
+    else:
+        # For subsequent pages, require a page name
+        if not page_id:
+            raise HTTPError(400, "Page name is required")
+        message = None
     
     success = site_manager.create_page(site_id, page_id, template)
     if not success:
-        raise HTTPError(400, "Failed to create page or site not found")
+        raise HTTPError(400, "Failed to create page")
     
-    return {"page_id": page_id, "created": True}
+    response = {"page_id": page_id, "created": True}
+    if message:
+        response["message"] = message
+    
+    return response
 
 @app.put("/api/v1/sites/<site_id>/pages/<page_id>")
 def update_page(site_id, page_id):
