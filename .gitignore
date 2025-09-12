@@ -185,3 +185,4 @@ cython_debug/
 /ap-website-builder/.vscode
 /backend/.idea
 /backend/src/sites
+/.claude

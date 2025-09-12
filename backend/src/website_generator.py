@@ -34,7 +34,7 @@ def generate_element_from_template(template, fields_dict):
     return element
 
 def generate_element_from_template_html(template, html_path):
-    print(template, html_path)
+    # print(template, html_path)
     with open(template, "r", encoding="utf-8") as template_file:
         element = template_file.read()
 

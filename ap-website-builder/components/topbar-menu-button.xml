@@ -1,0 +1,4 @@
+<!-- @target #topbar:child -->
+<!-- @param BUTTON_HREF -->
+<!-- @param BUTTON_LABEL -->
+<a href="${BUTTON_HREF}" class="menu-button">${BUTTON_LABEL}</a>

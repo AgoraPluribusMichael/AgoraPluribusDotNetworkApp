@@ -1,0 +1,10 @@
+<!-- @target main#main-article:child -->
+<!-- @param PANEL_ID -->
+<article id="${PANEL_ID}" class="panel">
+  <header>
+    <markdown />
+  </header>
+  <div class="panel-body">
+    <markdown />
+  </div>
+</article>

@@ -1,0 +1,12 @@
+<!-- @target head:child -->
+<!-- @param GTAG_ID -->
+<script id="head-gtag-script-async" async src="https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}"></script>
+<script id="head-gtag-script-push">
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag('js', new Date());
+  gtag('config', '${GTAG_ID}');
+</script>

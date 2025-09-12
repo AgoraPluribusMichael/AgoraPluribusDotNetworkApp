@@ -1,0 +1,6 @@
+<!-- @target main#main-article:child -->
+<div class="table-of-contents">
+  <h2>Table of Contents</h2>
+  <ol id="toc-body">
+  </ol>
+</div>

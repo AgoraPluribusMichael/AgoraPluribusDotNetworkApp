@@ -1,0 +1,5 @@
+<!-- @target footer:child -->
+<!-- @param COPYRIGHT_TEXT -->
+<div id="copyright">
+  &copy; ${COPYRIGHT_TEXT}
+</div>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+  <link href="styles/menu-style.css" rel="stylesheet">
+  <link href="styles/page-style.css" rel="stylesheet">
+  <script src="scripts/table-of-contents.js"></script>
+  <script src="scripts/floating-elements.js"></script>
+</head>
+
+<body>
+  <header>
+    <div id="topbanner">
+      <nav id="topbar" class="mobile-hidden">
+      </nav>
+    </div>
+  </header>
+  <script>
+    function toggleMenu() {
+      document.getElementById("topbar").classList.toggle("mobile-hidden");
+      document.getElementById("mobile-hamburger").classList.toggle("selected");
+    };
+  </script>
+
+  <main id="main-article" class="content-area container-fluid">
+  </main>
+  
+  <footer id="footer">
+  </footer>
+</body>
+
+</html>
