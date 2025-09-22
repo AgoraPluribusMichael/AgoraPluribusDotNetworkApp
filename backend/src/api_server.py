@@ -1,8 +1,15 @@
-import json
+import urllib.parse
+import re
+from pathlib import Path
 from bottle import Bottle, run, request, response, HTTPError
 
 from speech_to_text import SpeechToText
 from site_manager import SiteManager
+
+import logging
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Bottle()
 plugins_dict = {
@@ -22,7 +29,9 @@ def enable_cors():
     allowed_origins = [
         'http://localhost:3000', 'http://localhost:4321', 'http://localhost:5173',
         'http://127.0.0.1:3000', 'http://127.0.0.1:4321', 'http://127.0.0.1:5173',
-        'http://localhost:8080', 'http://127.0.0.1:8080'
+        'http://localhost:8080', 'http://127.0.0.1:8080',
+        'http://localhost:4322', 'http://127.0.0.1:4322',  # Added for Astro dev server
+        'null'  # Allow file:// protocol for local HTML files
     ]
     
     if origin in allowed_origins:
@@ -84,16 +93,19 @@ def create_site():
     data = request.json or {}
     name = data.get("name")
     description = data.get("description", "")
+    website_builder_path = data.get("websiteBuilderPath", "")
+    if website_builder_path:
+        website_builder_path = urllib.parse.unquote(website_builder_path)
     
     if not name:
         raise HTTPError(400, "Site name is required")
     
-    site = site_manager.create_site(name, description)
+    site = site_manager.create_site(name, description, website_builder_path)
     return {"site": site}
 
 @app.get("/api/v1/sites/<site_id>")
 def get_site(site_id):
-    site = site_manager.get_site(site_id)
+    site = site_manager.get_site_config(site_id)
     if not site:
         raise HTTPError(404, "Site not found")
     return {"site": site}
@@ -125,7 +137,7 @@ def list_pages(site_id):
 @app.get("/api/v1/sites/<site_id>/pages/<page_id>")
 def get_page(site_id, page_id):
     content = site_manager.get_page_content(site_id, page_id)
-    print(site_id, page_id, content)
+
     if content is None:
         raise HTTPError(404, "Page not found")
     return {
@@ -137,39 +149,42 @@ def get_page(site_id, page_id):
 @app.post("/api/v1/sites/<site_id>/pages")
 def create_page(site_id):
     data = request.json or {}
-    page_id = data.get("name")  # Changed from "page_id" to "name"
+    page_id = data.get("id")
+    page_name = data.get("name")
     template = data.get("template", "")
+    style = data.get("style", "")
+    website_builder_path = data.get("websiteBuilderPath", "")
+    if website_builder_path:
+        website_builder_path = urllib.parse.unquote(website_builder_path)
     
     # Check if site exists and get its pages
-    site = site_manager.get_site(site_id)
+    site = site_manager.get_site_config(site_id)
     if not site:
         raise HTTPError(404, "Site not found")
     
-    # If site has no pages, force the page name to be "index"
-    if len(site.get("pages", [])) == 0:
-        page_id = "index"
-        # Optionally return a message to inform the user
-        message = "First page must be named 'index'"
-    else:
-        # For subsequent pages, require a page name
-        if not page_id:
-            raise HTTPError(400, "Page name is required")
-        message = None
-    
-    success = site_manager.create_page(site_id, page_id, template)
+    success = site_manager.create_page(site_id, page_id, page_name, template, style, website_builder_path)
     if not success:
         raise HTTPError(400, "Failed to create page")
     
     response = {"page_id": page_id, "created": True}
-    if message:
-        response["message"] = message
     
     return response
 
+
+@app.get("/api/v1/sites/<site_id>/pages/<page_id>")
+def get_page(site_id, page_id):
+    content = site_manager.get_page_content(site_id, page_id)
+    if not content:
+        raise HTTPError(404, "Page or site not found")
+
+    return content
+
 @app.put("/api/v1/sites/<site_id>/pages/<page_id>")
 def update_page(site_id, page_id):
+    logger.info(f"Updating page: {request}")
     data = request.json or {}
     content = data.get("content", "")
+    logger.info(f"Page content: {content}")
     
     success = site_manager.update_page_content(site_id, page_id, content)
     if not success:
@@ -177,13 +192,103 @@ def update_page(site_id, page_id):
     
     return {"updated": True}
 
+@app.get("/api/v1/sites/<site_id>/pages/<page_id>/editor_path")
+def get_page_editor_path(site_id, page_id):
+    """Get the absolute file path for a page"""
+    site = site_manager.get_site_config(site_id)
+    if not site:
+        raise HTTPError(404, "Site not found")
+
+    page_id_found = False
+    for page in site.get("pages", []):
+        if list(page.keys())[0] == page_id:
+            page_id_found = True
+            break
+    if not page_id_found:
+        raise HTTPError(404, "Page not found")
+
+    page_path = site_manager.get_page_editor_path(site_id, page_id)
+    absolute_path = page_path.resolve()
+
+    return {
+        "site_id": site_id,
+        "page_id": page_id,
+        "absolute_path": str(absolute_path),
+        "exists": page_path.exists()
+    }
+
 @app.delete("/api/v1/sites/<site_id>/pages/<page_id>")
 def delete_page(site_id, page_id):
     success = site_manager.delete_page(site_id, page_id)
     if not success:
         raise HTTPError(400, "Cannot delete page (not found or is index page)")
-    
+
     return {"deleted": True}
+
+# Page Modification Script Endpoints
+@app.post("/api/v1/sites/<site_id>/pages/<page_id>/scripts")
+def create_modification_script(site_id, page_id):
+    data = request.json or {}
+    script_content = data.get("script_content", "")
+    script_name = data.get("script_name")
+    
+    if not script_content:
+        raise HTTPError(400, "Script content is required")
+    
+    script_id = site_manager.create_page_modification_script(site_id, page_id, script_content, script_name)
+    if not script_id:
+        raise HTTPError(400, "Failed to create modification script")
+    
+    return {"script_id": script_id, "created": True}
+
+# Components Endpoints
+@app.get("/api/v1/components")
+def list_components():
+    """List all available components with their targets and parameters"""
+    
+    components = []
+    components_dir = Path(__file__).parent / '../../ap-website-builder/components'
+    
+    # Find all XML files recursively
+    xml_files = list(components_dir.glob('**/*.xml'))
+    
+    for xml_file in xml_files:
+        try:
+            with open(xml_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Extract component info
+            component_id = xml_file.stem
+            component_name = component_id.replace('-', ' ').replace('_', ' ').title()
+            
+            # Extract @target
+            target_match = re.search(r'<!-- @target\s+(.+?)\s+-->', content)
+            target = target_match.group(1) if target_match else None
+            
+            # Extract @param entries
+            param_matches = re.findall(r'<!-- @param\s+(\w+)\s+-->', content)
+            params = param_matches if param_matches else []
+            
+            # Get relative file path for loading content
+            rel_path = xml_file.relative_to(Path(__file__).parent / '../../ap-website-builder')
+            rel_path = str(rel_path).replace('\\', '/')  # Normalize path separators
+            
+            component_info = {
+                'id': component_id,
+                'name': component_name,
+                'target': target,
+                'params': params,
+                'file_path': rel_path,
+                'content': content
+            }
+            
+            components.append(component_info)
+            
+        except Exception as e:
+            logger.error(f"Failed to parse component {xml_file}: {e}")
+            continue
+    
+    return {"components": components}
 
 if __name__ == "__main__":
     # Listen only on localhost (127.0.0.1)

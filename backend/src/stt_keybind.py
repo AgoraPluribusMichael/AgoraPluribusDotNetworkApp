@@ -4,7 +4,6 @@ Command-line interface for vibevoice
 """
 
 import os
-import subprocess
 
 import requests
 import sounddevice as sd

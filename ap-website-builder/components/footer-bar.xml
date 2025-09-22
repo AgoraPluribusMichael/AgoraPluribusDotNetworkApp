@@ -1,5 +1,4 @@
 <!-- @target footer:child -->
-<!-- @param PANEL_ID -->
-<div id="footer-bar" class="floating">
+<div id="footer-bar" class="floating editable">
   
 </div>

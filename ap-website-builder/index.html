@@ -1,38 +1,709 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
+  <title>Website Builder</title>
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
-  <link href="styles/menu-style.css" rel="stylesheet">
-  <link href="styles/page-style.css" rel="stylesheet">
-  <script src="scripts/table-of-contents.js"></script>
-  <script src="scripts/floating-elements.js"></script>
+  <link href="style.css" rel="stylesheet">
 </head>
-
 <body>
-  <header>
-    <div id="topbanner">
-      <nav id="topbar" class="mobile-hidden">
-      </nav>
+  <div class="main-container">
+    <header class="text-center">
+      <h1>Website Builder</h1>
+      <p class="lead">Create and manage your websites</p>
+    </header>
+
+    <!-- Main Site Management View -->
+    <div id="site-management-view">
+      <div class="row">
+        <div class="col-md-12">
+          <button class="btn btn-primary btn-lg" onclick="showCreateSiteModal()">
+            <span class="glyphicon glyphicon-plus"></span> Create New Site
+          </button>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-12">
+          <h3>Your Sites</h3>
+          <div id="sites-container">
+            <!-- Sites will be loaded here -->
+          </div>
+        </div>
+      </div>
     </div>
-  </header>
+
+    <!-- Page Management View -->
+    <div id="page-management-view" class="hidden">
+      <div class="row">
+        <div class="col-md-12">
+          <button class="btn btn-secondary" onclick="showSiteManagement()">
+            <span class="glyphicon glyphicon-arrow-left"></span> Back to Sites
+          </button>
+          <button class="btn btn-success btn-lg" onclick="createNewPageDirectly()">
+            <span class="glyphicon glyphicon-plus"></span> Create New Page
+          </button>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-12">
+          <h3 id="current-site-name">Site Pages</h3>
+          <div id="pages-container">
+            <!-- Pages will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Editor View -->
+    <div id="page-editor-view" class="hidden">
+      <div class="row">
+        <div class="col-md-12">
+          <button class="btn btn-secondary" onclick="showPageManagement()">
+            <span class="glyphicon glyphicon-arrow-left"></span> Back to Pages
+          </button>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-12">
+          <h3 id="current-page-name">Page Editor</h3>
+          <div id="page-preview-container" style="position: relative;">
+            <iframe id="page-preview" src="" style="width: 100%; height: 80vh; border: 1px solid #ddd; border-radius: 4px;"></iframe>
+            <!-- Component buttons will be injected here dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Site Modal -->
+  <div id="create-site-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="hideCreateSiteModal()">&times;</span>
+      <h3>Create New Site</h3>
+      <form onsubmit="createSite(event)">
+        <div class="form-group">
+          <label for="site-name">Site Name:</label>
+          <input type="text" id="site-name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="site-description">Description:</label>
+          <textarea id="site-description" class="form-control" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Site</button>
+        <button type="button" class="btn btn-secondary" onclick="hideCreateSiteModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Page Modal -->
+  <div id="create-page-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="hideCreatePageModal()">&times;</span>
+      <h3>Create New Page</h3>
+      <form onsubmit="createPage(event)">
+        <div class="form-group">
+          <label for="create-page-id">Page ID:</label>
+          <input type="text" id="create-page-id" class="form-control" required>
+          <small id="create-page-id-helper" style="display: none; color: #6c757d;">First page must have id 'index'</small>
+        </div>
+        <div class="form-group">
+          <label for="create-page-name">Page Name:</label>
+          <input type="text" id="create-page-name" class="form-control" required>
+          <small id="create-page-name-helper" style="display: none; color: #6c757d;">First page must have name '🏠 Home'</small>
+        </div>
+        <div class="form-group">
+          <label for="create-page-template">Template:</label>
+          <select id="create-page-template" class="form-control">
+            <option value="pluribus">Pluribus Template</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="create-page-style">Style:</label>
+          <select id="create-page-style" class="form-control">
+            <option value="pluribus_dark">Pluribus Dark</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Page</button>
+        <button type="button" class="btn btn-secondary" onclick="hideCreatePageModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Page Configuration Modal -->
+  <div id="page-config-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="hidePageConfigModal()">&times;</span>
+      <h3>Page Configuration</h3>
+      <form onsubmit="applyPageConfig(event)">
+        <div class="form-group">
+          <label for="config-page-id">Page ID:</label>
+          <input type="text" id="config-page-id" class="form-control" required>
+          <small id="page-id-helper" style="display: none; color: #6c757d;">First page must have id 'index'</small>
+        </div>
+        <div class="form-group">
+          <label for="config-page-name">Page Name:</label>
+          <input type="text" id="config-page-name" class="form-control" required>
+          <small id="page-name-helper" style="display: none; color: #6c757d;">First page must have name '🏠 Home'</small>
+        </div>
+        <div class="form-group">
+          <label for="config-page-template">Template:</label>
+          <select id="config-page-template" class="form-control" onchange="previewTemplate()">
+            <option value="pluribus">Pluribus Template</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="config-page-style">Style:</label>
+          <select id="config-page-style" class="form-control" onchange="previewTemplate()">
+            <option value="pluribus_dark">Pluribus Dark</option>
+            <!-- More styles can be added here as they become available -->
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Page</button>
+        <button type="button" class="btn btn-secondary" onclick="hidePageConfigModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
   <script>
-    function toggleMenu() {
-      document.getElementById("topbar").classList.toggle("mobile-hidden");
-      document.getElementById("mobile-hamburger").classList.toggle("selected");
-    };
+    // Global state
+    let currentSiteId = null;
+    let currentPageId = null;
+    let sites = [];
+    let templates = [];
+
+    // API Configuration
+    const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+
+    // API Helper Functions
+    async function apiRequest(url, options = {}) {
+      // Add CORS handling for OPTIONS requests
+      if (options.method && options.method !== 'GET') {
+        // Send OPTIONS request first for non-GET requests
+        try {
+          await fetch(`${API_BASE_URL}${url}`, {
+            method: 'OPTIONS',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+        } catch (e) {
+          // OPTIONS request might fail, but that's okay
+        }
+      }
+
+      const response = await fetch(`${API_BASE_URL}${url}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        mode: 'cors',
+        credentials: 'omit',
+        ...options
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`API Error: ${response.status} - ${error}`);
+      }
+      
+      return response.json();
+    }
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTemplates();
+      showSiteManagement();
+    });
+
+    // Load available templates
+    function loadTemplates() {
+      templates = [
+        { id: 'pluribus', name: 'Pluribus Template', file: 'templates/pluribus.html' }
+      ];
+    }
+
+    // Site Management Functions
+    function showSiteManagement() {
+      document.getElementById('site-management-view').classList.remove('hidden');
+      document.getElementById('page-management-view').classList.add('hidden');
+      document.getElementById('page-editor-view').classList.add('hidden');
+      loadSites();
+    }
+
+    async function loadSites() {
+      const container = document.getElementById('sites-container');
+      container.innerHTML = '<p class="text-muted">Loading sites...</p>';
+      
+      try {
+        const response = await apiRequest('/sites');
+        sites = response.sites || [];
+        
+        container.innerHTML = '';
+        
+        if (sites.length === 0) {
+          container.innerHTML = '<p class="text-muted">No sites created yet. Click "Create New Site" to get started.</p>';
+          return;
+        }
+
+        sites.forEach(site => {
+          const siteCard = document.createElement('div');
+          siteCard.className = 'site-card';
+          siteCard.innerHTML = `
+            <h4>${site.name}</h4>
+            <p class="text-muted">${site.description || 'No description'}</p>
+            <p><small>Created: ${new Date(site.created_at).toLocaleDateString()}</small></p>
+            <p><small>Last Updated: ${new Date(site.updated_at).toLocaleDateString()}</small></p>
+            <button class="btn btn-primary" onclick="selectSite('${site.id}')">Manage Pages</button>
+            <button class="btn btn-danger" onclick="deleteSite('${site.id}')">Delete</button>
+          `;
+          container.appendChild(siteCard);
+        });
+      } catch (error) {
+        container.innerHTML = `<p class="text-danger">Error loading sites: ${error.message}</p>`;
+      }
+    }
+
+    function showCreateSiteModal() {
+      document.getElementById('create-site-modal').style.display = 'block';
+    }
+
+    function hideCreateSiteModal() {
+      document.getElementById('create-site-modal').style.display = 'none';
+      document.getElementById('site-name').value = '';
+      document.getElementById('site-description').value = '';
+    }
+
+    function getWebsiteBuilderPath() {
+      var rootDirectoryPath = document.location.href;
+      console.log("root dir path: " + rootDirectoryPath);
+      const filePrefix = "file:///";
+      if (rootDirectoryPath.startsWith(filePrefix)) {
+        rootDirectoryPath = rootDirectoryPath.substring(filePrefix.length);
+        console.log("root dir path: " + rootDirectoryPath);
+        var components = rootDirectoryPath.split('/');
+        rootDirectoryPath = components.slice(0, components.length-1).join('/');
+        return rootDirectoryPath;
+      } else {
+        return null;
+      }
+    }
+
+    async function createSite(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('site-name').value;
+      const description = document.getElementById('site-description').value;
+      const websiteBuilderPath = getWebsiteBuilderPath();
+      
+      try {
+        await apiRequest('/sites', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: name,
+            description: description,
+            websiteBuilderPath: websiteBuilderPath
+          })
+        });
+        
+        hideCreateSiteModal();
+        loadSites();
+      } catch (error) {
+        alert(`Error creating site: ${error.message}`);
+      }
+    }
+
+    async function deleteSite(siteId) {
+      if (confirm('Are you sure you want to delete this site and all its pages?')) {
+        try {
+          await apiRequest(`/sites/${siteId}`, {
+            method: 'DELETE'
+          });
+          loadSites();
+        } catch (error) {
+          alert(`Error deleting site: ${error.message}`);
+        }
+      }
+    }
+
+    function selectSite(siteId) {
+      currentSiteId = siteId;
+      showPageManagement();
+    }
+
+    // Page Management Functions
+    async function showPageManagement() {
+      document.getElementById('site-management-view').classList.add('hidden');
+      document.getElementById('page-management-view').classList.remove('hidden');
+      document.getElementById('page-editor-view').classList.add('hidden');
+      
+      try {
+        const response = await apiRequest(`/sites/${currentSiteId}`);
+        const site = response.site;
+        document.getElementById('current-site-name').textContent = site ? site.name + ' - Pages' : 'Site Pages';
+      } catch (error) {
+        document.getElementById('current-site-name').textContent = 'Site Pages';
+      }
+      
+      loadPages();
+    }
+
+    async function loadPages() {
+      const container = document.getElementById('pages-container');
+      container.innerHTML = '<p class="text-muted">Loading pages...</p>';
+      
+      try {
+        const response = await apiRequest(`/sites/${currentSiteId}/pages`);
+        const pages = response.pages || [];
+        
+        container.innerHTML = '';
+        
+        if (pages.length === 0) {
+          container.innerHTML = '<p class="text-muted">No pages created yet. Click "Create New Page" to get started.</p>';
+          return;
+        }
+
+        pages.forEach(page => {
+          const pageCard = document.createElement('div');
+          pageCard.className = 'page-card';
+          pageCard.innerHTML = `
+            <h5>${page.id}</h5>
+            <button class="btn btn-primary" onclick="editPage('${page.id}')">Edit Page</button>
+            <button class="btn btn-danger" onclick="deletePage('${page.id}')">Delete</button>
+          `;
+          container.appendChild(pageCard);
+          console.log("Loading pages:", page);
+        });
+      } catch (error) {
+        container.innerHTML = `<p class="text-danger">Error loading pages: ${error.message}</p>`;
+      }
+    }
+
+    async function showCreatePageModal() {
+      try {
+        // Check if this site has any pages
+        const response = await apiRequest(`/sites/${currentSiteId}/pages`);
+        const pages = response.pages || [];
+        
+        const pageIdInput = document.getElementById('create-page-id');
+        const pageIdHelper = document.getElementById("create-page-id-helper");
+        const pageNameInput = document.getElementById('create-page-name');
+        const pageNameHelper = document.getElementById("create-page-name-helper");
+        const isFirstPage = pages.length === 0;
+        
+        if (isFirstPage) {
+          console.log("FIRST PAGE");
+          // First page must be named "index"
+          pageIdInput.value = 'index';
+          pageIdInput.disabled = true;
+          pageIdInput.style.backgroundColor = '#f5f5f5';
+          
+          pageIdHelper.style.display = "block";
+          
+          pageNameInput.value = 'Home';
+          pageNameInput.disabled = true;
+          pageNameInput.style.backgroundColor = '#f5f5f5';
+
+          pageNameHelper.style.display = "block";
+          
+
+        } else {
+          // Allow custom page names for subsequent pages
+          pageNameInput.value = '';
+          pageNameInput.disabled = false;
+          pageNameInput.style.backgroundColor = '';
+
+          pageIdInput.value = '';
+          pageIdInput.disabled = false;
+          pageIdInput.style.backgroundColor = '';
+          
+          // Remove helper text if it exists
+          pageIdHelper.style.display = "none";
+          pageNameHelper.style.display = "none";
+        }
+        
+        document.getElementById('create-page-modal').style.display = 'block';
+      } catch (error) {
+        // If we can't check pages, assume it's the first page
+        const pageNameInput = document.getElementById('page-name');
+        pageNameInput.value = 'index';
+        pageNameInput.disabled = true;
+        pageNameInput.style.backgroundColor = '#f5f5f5';
+        
+        document.getElementById('create-page-modal').style.display = 'block';
+      }
+    }
+
+    function hideCreatePageModal() {
+      document.getElementById('create-page-modal').style.display = 'none';
+      
+      // Reset the page name input
+      const pageNameInput = document.getElementById('page-name');
+      pageNameInput.value = '';
+      pageNameInput.disabled = false;
+      pageNameInput.style.backgroundColor = '';
+      
+      // Remove helper text if it exists
+      const existingHelper = document.getElementById('page-id-helper');
+      if (existingHelper) {
+        existingHelper.remove();
+      }
+    }
+
+    async function createPage(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('create-page-id').value;
+      const name = document.getElementById('create-page-name').value;
+      const template = document.getElementById('create-page-template').value;
+      const style = document.getElementById('create-page-style').value;
+      
+      try {
+        const response = await apiRequest(`/sites/${currentSiteId}/pages`, {
+          method: 'POST',
+          body: JSON.stringify({
+            id: id,
+            name: name,
+            template: template,
+            style: style,
+            websiteBuilderPath: getWebsiteBuilderPath()
+          })
+        });
+        
+        hideCreatePageModal();
+        loadPages();
+        
+        // If we're in the editor, update the stylesheet using JavaScript
+        if (currentPageId === name) {
+          setTimeout(() => {
+            updatePreviewStylesheet(style);
+          }, 1000); // Wait for page to be created and loaded
+        }
+      } catch (error) {
+        alert(`Error creating page: ${error.message}`);
+      }
+    }
+
+    async function deletePage(pageId) {
+      if (confirm('Are you sure you want to delete this page?')) {
+        try {
+          await apiRequest(`/sites/${currentSiteId}/pages/${pageId}`, {
+            method: 'DELETE'
+          });
+          loadPages();
+        } catch (error) {
+          alert(`Error deleting page: ${error.message}`);
+        }
+      }
+    }
+
+    function editPage(pageId) {
+      currentPageId = pageId;
+      showPageEditor();
+    }
+
+    // Create new page directly (goes to editor)
+    async function createNewPageDirectly() {
+      try {
+        // Check if this site has any pages to determine if this is the first page
+        const response = await apiRequest(`/sites/${currentSiteId}/pages`);
+        const pages = response.pages || [];
+        const isFirstPage = pages.length === 0;
+        
+        // Set temporary page ID for new page
+        currentPageId = isFirstPage ? 'index' : 'new-page-' + Date.now();
+        
+        // Go to editor and show config modal
+        showPageEditor(true, isFirstPage);
+      } catch (error) {
+        // If we can't check pages, assume it's the first page
+        currentPageId = 'index';
+        showPageEditor(true, true);
+      }
+    }
+
+    // Page Editor Functions
+    async function showPageEditor(isNewPage = false, isFirstPage = false) {
+      console.log(`showPageEditor: isNewPage=${isNewPage} isFirstPage=${isFirstPage}`)
+      document.getElementById('site-management-view').classList.add('hidden');
+      document.getElementById('page-management-view').classList.add('hidden');
+      document.getElementById('page-editor-view').classList.remove('hidden');
+      
+      if (isNewPage) {
+        // Show configuration modal for new page
+        document.getElementById('current-page-name').textContent = 'New Page - Editor';
+        showCreatePageModal();
+      } else {
+        try {
+          document.getElementById('current-page-name').textContent = currentPageId ? currentPageId + ' - Editor' : 'Page Editor';
+          // Load page content in iframe
+          console.log("currentPageId:" + currentPageId);
+          loadPageInEditor(currentPageId);
+        } catch (error) {
+          document.getElementById('current-page-name').textContent = 'Page Editor - Error';
+          console.log('Error loading page in editor:');
+        }
+      }
+    }
+
+    async function loadPageInEditor(page_id) {
+      try {
+        // Get the absolute file path from the API
+        const response = await apiRequest(`/sites/${currentSiteId}/pages/${page_id}/editor_path`);
+        console.log(response);
+        const pageFilePath = `file:///${response.absolute_path.replace(/\\/g, '/')}`;
+        document.getElementById('page-preview').src = pageFilePath;
+      } catch (error) {
+        console.error('Error loading page in editor:', error);
+        alert(`Error loading page: ${error.message}`);
+      }
+    }
+
+    function previewTemplate() {
+      const template = document.getElementById('config-page-template').value;
+      const style = document.getElementById('config-page-style').value;
+      const templateObj = templates.find(t => t.id === template);
+      
+      if (templateObj) {
+        document.getElementById('page-preview').src = templateObj.file;
+        
+        // Wait for iframe to load, then update stylesheet and inject component buttons
+        document.getElementById('page-preview').onload = function() {
+          setTimeout(() => {
+            updatePreviewStylesheet(style);
+          }, 500);
+        };
+      }
+    }
+
+    // Page Configuration Modal Functions
+    function showPageConfigModal(isFirstPage = false) {
+      var pageIdInput = document.getElementById('config-page-id');
+      var pageIdHelper = document.getElementById('page-id-helper');
+      var pageNameInput = document.getElementById('config-page-name');
+      var pageNameHelper = document.getElementById('page-name-helper');
+      
+      if (isFirstPage) {
+        // Auto-fill and disable for first page
+        console.log("FIRST PAGE");
+        pageIdInput.value = 'index';
+        pageIdInput.disabled = true;
+        pageIdInput.style.backgroundColor = '#f5f5f5';
+        pageIdHelper.style.display = 'block';
+
+        pageNameInput.value = 'index';
+        pageNameInput.disabled = true;
+        pageNameInput.style.backgroundColor = '#f5f5f5';
+        pageNameHelper.style.display = 'block';
+      } else {
+        // Enable and clear for subsequent pages
+        pageIdInput.value = '';
+        pageIdInput.disabled = false;
+        pageIdInput.style.backgroundColor = '';
+        pageIdHelper.style.display = 'none';
+
+        pageNameInput.value = '';
+        pageNameInput.disabled = false;
+        pageNameInput.style.backgroundColor = '';
+        pageNameHelper.style.display = 'none';
+      }
+      
+      document.getElementById('page-config-modal').style.display = 'block';
+      
+      // Load template preview
+      previewTemplate();
+    }
+
+    function hidePageConfigModal() {
+      document.getElementById('page-config-modal').style.display = 'none';
+      
+      // Reset form
+      const pageNameInput = document.getElementById('config-page-id');
+      pageNameInput.value = '';
+      pageNameInput.disabled = false;
+      pageNameInput.style.backgroundColor = '';
+      document.getElementById('page-id-helper').style.display = 'none';
+    }
+
+    async function applyPageConfig(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('config-page-id').value;
+      const name = document.getElementById('config-page-name').value;
+      const template = document.getElementById('config-page-template').value;
+      const style = document.getElementById('config-page-style').value;
+      
+      try {
+        // Create the page via API
+        const response = await apiRequest(`/sites/${currentSiteId}/pages`, {
+          method: 'POST',
+          body: JSON.stringify({
+            id: id,
+            name: name,
+            template: template,
+            style: style,
+            websiteBuilderPath: getWebsiteBuilderPath()
+          })
+        });
+        
+        // Update current page ID
+        currentPageId = response.page_id || id;
+        
+        // Update page title
+        document.getElementById('current-page-name').textContent = `${currentPageId} - Editor`;
+        
+        hidePageConfigModal();
+        
+        console.log(currentPageId);
+        // Reload the page in editor
+        loadPageInEditor(currentPageId);
+        
+      } catch (error) {
+        alert(`Error creating page: ${error.message}`);
+      }
+    }
+
+    function previewTemplate() {
+      const template = document.getElementById('config-page-template').value;
+      const style = document.getElementById('config-page-style').value;
+      const templateObj = templates.find(t => t.id === template);
+      
+      if (templateObj) {
+        document.getElementById('page-preview').src = templateObj.file;
+      }
+    }
+
+    function updatePreviewStylesheet(style) {
+      try {
+        const iframe = document.getElementById('page-preview');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        
+        // Find the stylesheet link with ID "stylesheet"
+        const stylesheetLink = iframeDoc.getElementById('stylesheet');
+        
+        if (stylesheetLink && style) {
+          // Update the href to point to the selected style
+          stylesheetLink.href = `../styles/${style}.css`;
+          console.log(`Updated stylesheet to: ../styles/${style}.css`);
+        }
+      } catch (error) {
+        console.error('Failed to update preview stylesheet:', error);
+      }
+    }
+
+    // Click outside modal to close
+    window.onclick = function(event) {
+      const modals = document.querySelectorAll('.modal');
+      modals.forEach(modal => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
   </script>
-
-  <main id="main-article" class="content-area container-fluid">
-  </main>
-  
-  <footer id="footer">
-  </footer>
 </body>
-
 </html>

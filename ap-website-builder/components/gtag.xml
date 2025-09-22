@@ -1,7 +1,7 @@
 <!-- @target head:child -->
 <!-- @param GTAG_ID -->
-<script id="head-gtag-script-async" async src="https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}"></script>
-<script id="head-gtag-script-push">
+<script id="head-gtag-script-async" param="GTAG_ID" async src="https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}"></script>
+<script id="head-gtag-script-push" param="GTAG_ID">
   window.dataLayer = window.dataLayer || [];
 
   function gtag() {

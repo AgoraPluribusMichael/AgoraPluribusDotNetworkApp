@@ -1,10 +1,10 @@
 <!-- @target main#main-article:child -->
 <!-- @param PANEL_ID -->
-<article id="${PANEL_ID}" class="panel">
+<article id="${PANEL_ID}" param="PANEL_ID" class="panel">
   <header>
-    <markdown />
+    <markdown class="editable" />
   </header>
   <div class="panel-body">
-    <markdown />
+    <markdown class="editable" />
   </div>
 </article>
