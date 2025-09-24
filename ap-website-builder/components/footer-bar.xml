@@ -1,4 +1,2 @@
 <!-- @target footer:child -->
-<div id="footer-bar" class="floating editable">
-  
-</div>
+<div id="footer-bar" class="floating"></div>

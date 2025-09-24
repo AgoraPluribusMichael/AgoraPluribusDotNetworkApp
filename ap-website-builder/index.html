@@ -107,14 +107,9 @@
       <h3>Create New Page</h3>
       <form onsubmit="createPage(event)">
         <div class="form-group">
-          <label for="create-page-id">Page ID:</label>
-          <input type="text" id="create-page-id" class="form-control" required>
-          <small id="create-page-id-helper" style="display: none; color: #6c757d;">First page must have id 'index'</small>
-        </div>
-        <div class="form-group">
           <label for="create-page-name">Page Name:</label>
           <input type="text" id="create-page-name" class="form-control" required>
-          <small id="create-page-name-helper" style="display: none; color: #6c757d;">First page must have name '🏠 Home'</small>
+          <small id="create-page-name-helper" style="display: none; color: #6c757d;">First page must have name 'Home'</small>
         </div>
         <div class="form-group">
           <label for="create-page-template">Template:</label>
@@ -141,14 +136,9 @@
       <h3>Page Configuration</h3>
       <form onsubmit="applyPageConfig(event)">
         <div class="form-group">
-          <label for="config-page-id">Page ID:</label>
-          <input type="text" id="config-page-id" class="form-control" required>
-          <small id="page-id-helper" style="display: none; color: #6c757d;">First page must have id 'index'</small>
-        </div>
-        <div class="form-group">
           <label for="config-page-name">Page Name:</label>
           <input type="text" id="config-page-name" class="form-control" required>
-          <small id="page-name-helper" style="display: none; color: #6c757d;">First page must have name '🏠 Home'</small>
+          <small id="page-name-helper" style="display: none; color: #6c757d;">First page must have name 'Home'</small>
         </div>
         <div class="form-group">
           <label for="config-page-template">Template:</label>
@@ -331,6 +321,7 @@
     }
 
     function selectSite(siteId) {
+      console.log(`Selected site ${siteId}`);
       currentSiteId = siteId;
       showPageManagement();
     }
@@ -384,105 +375,73 @@
     }
 
     async function showCreatePageModal() {
-      try {
-        // Check if this site has any pages
-        const response = await apiRequest(`/sites/${currentSiteId}/pages`);
-        const pages = response.pages || [];
-        
-        const pageIdInput = document.getElementById('create-page-id');
-        const pageIdHelper = document.getElementById("create-page-id-helper");
-        const pageNameInput = document.getElementById('create-page-name');
-        const pageNameHelper = document.getElementById("create-page-name-helper");
-        const isFirstPage = pages.length === 0;
-        
-        if (isFirstPage) {
-          console.log("FIRST PAGE");
-          // First page must be named "index"
-          pageIdInput.value = 'index';
-          pageIdInput.disabled = true;
-          pageIdInput.style.backgroundColor = '#f5f5f5';
-          
-          pageIdHelper.style.display = "block";
-          
-          pageNameInput.value = 'Home';
-          pageNameInput.disabled = true;
-          pageNameInput.style.backgroundColor = '#f5f5f5';
-
-          pageNameHelper.style.display = "block";
-          
-
-        } else {
-          // Allow custom page names for subsequent pages
-          pageNameInput.value = '';
-          pageNameInput.disabled = false;
-          pageNameInput.style.backgroundColor = '';
-
-          pageIdInput.value = '';
-          pageIdInput.disabled = false;
-          pageIdInput.style.backgroundColor = '';
-          
-          // Remove helper text if it exists
-          pageIdHelper.style.display = "none";
-          pageNameHelper.style.display = "none";
-        }
-        
-        document.getElementById('create-page-modal').style.display = 'block';
-      } catch (error) {
-        // If we can't check pages, assume it's the first page
-        const pageNameInput = document.getElementById('page-name');
-        pageNameInput.value = 'index';
+      // Check if this site has any pages
+      const response = await apiRequest(`/sites/${currentSiteId}/pages`);
+      const pages = response.pages || [];
+      
+      const pageNameInput = document.getElementById('create-page-name');
+      const pageNameHelper = document.getElementById("create-page-name-helper");
+      const isFirstPage = pages.length === 0;
+      
+      if (isFirstPage) {
+        console.log("FIRST PAGE");
+        pageNameInput.value = 'Home';
         pageNameInput.disabled = true;
         pageNameInput.style.backgroundColor = '#f5f5f5';
+
+        pageNameHelper.style.display = "block";
         
-        document.getElementById('create-page-modal').style.display = 'block';
+
+      } else {
+        // Allow custom page names for subsequent pages
+        pageNameInput.value = '';
+        pageNameInput.disabled = false;
+        pageNameInput.style.backgroundColor = '';
+        
+        // Remove helper text if it exists
+        pageNameHelper.style.display = "none";
       }
+      
+      document.getElementById('create-page-modal').style.display = 'block';
     }
 
     function hideCreatePageModal() {
       document.getElementById('create-page-modal').style.display = 'none';
       
       // Reset the page name input
-      const pageNameInput = document.getElementById('page-name');
+      const pageNameInput = document.getElementById('create-page-name');
       pageNameInput.value = '';
       pageNameInput.disabled = false;
       pageNameInput.style.backgroundColor = '';
       
       // Remove helper text if it exists
-      const existingHelper = document.getElementById('page-id-helper');
-      if (existingHelper) {
-        existingHelper.remove();
-      }
+      const pageNameHelper = document.getElementById('create-page-name-helper');
+      pageNameHelper.style.display = "none";
     }
 
     async function createPage(event) {
       event.preventDefault();
       
-      const id = document.getElementById('create-page-id').value;
       const name = document.getElementById('create-page-name').value;
       const template = document.getElementById('create-page-template').value;
       const style = document.getElementById('create-page-style').value;
       
       try {
-        const response = await apiRequest(`/sites/${currentSiteId}/pages`, {
+        const responseJson = await apiRequest(`/sites/${currentSiteId}/pages`, {
           method: 'POST',
           body: JSON.stringify({
-            id: id,
             name: name,
             template: template,
             style: style,
             websiteBuilderPath: getWebsiteBuilderPath()
           })
         });
+
+        pageId = responseJson.pageId;
         
         hideCreatePageModal();
         loadPages();
-        
-        // If we're in the editor, update the stylesheet using JavaScript
-        if (currentPageId === name) {
-          setTimeout(() => {
-            updatePreviewStylesheet(style);
-          }, 1000); // Wait for page to be created and loaded
-        }
+        loadPageInEditor(pageId);
       } catch (error) {
         alert(`Error creating page: ${error.message}`);
       }
@@ -503,109 +462,51 @@
 
     function editPage(pageId) {
       currentPageId = pageId;
-      showPageEditor();
+      loadPageInEditor(pageId);
     }
 
     // Create new page directly (goes to editor)
     async function createNewPageDirectly() {
-      try {
-        // Check if this site has any pages to determine if this is the first page
-        const response = await apiRequest(`/sites/${currentSiteId}/pages`);
-        const pages = response.pages || [];
-        const isFirstPage = pages.length === 0;
-        
-        // Set temporary page ID for new page
-        currentPageId = isFirstPage ? 'index' : 'new-page-' + Date.now();
-        
-        // Go to editor and show config modal
-        showPageEditor(true, isFirstPage);
-      } catch (error) {
-        // If we can't check pages, assume it's the first page
-        currentPageId = 'index';
-        showPageEditor(true, true);
-      }
+      // Check if this site has any pages to determine if this is the first page
+      const response = await apiRequest(`/sites/${currentSiteId}/pages`);
+      const pages = response.pages || [];
+      const isFirstPage = pages.length === 0;
+
+      showCreatePageModal();
     }
 
-    // Page Editor Functions
-    async function showPageEditor(isNewPage = false, isFirstPage = false) {
-      console.log(`showPageEditor: isNewPage=${isNewPage} isFirstPage=${isFirstPage}`)
-      document.getElementById('site-management-view').classList.add('hidden');
-      document.getElementById('page-management-view').classList.add('hidden');
-      document.getElementById('page-editor-view').classList.remove('hidden');
-      
-      if (isNewPage) {
-        // Show configuration modal for new page
-        document.getElementById('current-page-name').textContent = 'New Page - Editor';
-        showCreatePageModal();
-      } else {
-        try {
-          document.getElementById('current-page-name').textContent = currentPageId ? currentPageId + ' - Editor' : 'Page Editor';
-          // Load page content in iframe
-          console.log("currentPageId:" + currentPageId);
-          loadPageInEditor(currentPageId);
-        } catch (error) {
-          document.getElementById('current-page-name').textContent = 'Page Editor - Error';
-          console.log('Error loading page in editor:');
-        }
-      }
-    }
-
-    async function loadPageInEditor(page_id) {
+    async function loadPageInEditor(pageId) {
       try {
         // Get the absolute file path from the API
-        const response = await apiRequest(`/sites/${currentSiteId}/pages/${page_id}/editor_path`);
+        const response = await apiRequest(`/sites/${currentSiteId}/pages/${pageId}/editorPath`);
         console.log(response);
         const pageFilePath = `file:///${response.absolute_path.replace(/\\/g, '/')}`;
         document.getElementById('page-preview').src = pageFilePath;
+
+        document.getElementById('site-management-view').classList.add('hidden');
+        document.getElementById('page-management-view').classList.add('hidden');
+        document.getElementById('page-editor-view').classList.remove('hidden');
+        document.getElementById('current-page-name').textContent = `Page Editor - ${pageId}`;
       } catch (error) {
         console.error('Error loading page in editor:', error);
         alert(`Error loading page: ${error.message}`);
       }
     }
 
-    function previewTemplate() {
-      const template = document.getElementById('config-page-template').value;
-      const style = document.getElementById('config-page-style').value;
-      const templateObj = templates.find(t => t.id === template);
-      
-      if (templateObj) {
-        document.getElementById('page-preview').src = templateObj.file;
-        
-        // Wait for iframe to load, then update stylesheet and inject component buttons
-        document.getElementById('page-preview').onload = function() {
-          setTimeout(() => {
-            updatePreviewStylesheet(style);
-          }, 500);
-        };
-      }
-    }
-
     // Page Configuration Modal Functions
     function showPageConfigModal(isFirstPage = false) {
-      var pageIdInput = document.getElementById('config-page-id');
-      var pageIdHelper = document.getElementById('page-id-helper');
       var pageNameInput = document.getElementById('config-page-name');
       var pageNameHelper = document.getElementById('page-name-helper');
       
       if (isFirstPage) {
         // Auto-fill and disable for first page
         console.log("FIRST PAGE");
-        pageIdInput.value = 'index';
-        pageIdInput.disabled = true;
-        pageIdInput.style.backgroundColor = '#f5f5f5';
-        pageIdHelper.style.display = 'block';
-
-        pageNameInput.value = 'index';
+        pageNameInput.value = 'Home';
         pageNameInput.disabled = true;
         pageNameInput.style.backgroundColor = '#f5f5f5';
         pageNameHelper.style.display = 'block';
       } else {
         // Enable and clear for subsequent pages
-        pageIdInput.value = '';
-        pageIdInput.disabled = false;
-        pageIdInput.style.backgroundColor = '';
-        pageIdHelper.style.display = 'none';
-
         pageNameInput.value = '';
         pageNameInput.disabled = false;
         pageNameInput.style.backgroundColor = '';

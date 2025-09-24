@@ -1,5 +1,6 @@
+<!-- @param EMBED_ID -->
 <div class="video-container">
-  <iframe id="video-iframe" src="https://www.youtube.com/embed/${EMBED_ID}?color=white&fs=0"
+  <iframe class="editable param" src="https://www.youtube.com/embed/${EMBED_ID}?color=white&fs=0"
   title="YouTube video player"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
   referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>

@@ -1,0 +1,171 @@
+.component-panel {
+  background: #181818;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.component-input-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.component-input-panel h3 {
+  color: black;
+}
+
+.component-list div {
+  border: 1px solid rgb(34, 34, 34);
+  border-radius: 4px;
+  padding: 10px;
+  margin: 10px 0px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.component-item {
+  background: #181818;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 5px 0;
+  cursor: pointer;
+}
+.component-item:hover {
+  background: #686868;
+}
+
+.component-edit-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  margin-left: 4px;
+  vertical-align: top;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.component-insertion-button {
+    position: absolute;
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.component-selection-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.editable {
+  color: white;
+}
+
+.editable p {
+  font-size: 16pt;
+  text-align: left;
+  margin: 0;
+  line-height: 1.5;
+  padding: 0px 20px 20px 20px;
+}
+
+.close-modal-btn {
+    margin-top: 15px; padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;
+}
+
+#edit-content {
+    width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; resize: none;
+    white-space: nowrap;
+}
+
+#save-btn {
+    padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;
+}
+
+#cancel-btn {
+    padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;
+}
+
+#markdown-content {
+    width: 100%; height: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; resize: none;
+}
+
+#markdown-preview {
+    width: 100%; height: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9; overflow-y: auto;
+}
+
+.markdown-label {
+    display: block; margin-bottom: 5px; font-weight: bold;
+}
+
+.editable-textarea {
+    width: auto;
+    height: auto;
+    padding: 4px;
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: inherit;
+    resize: none;
+    field-sizing: content;
+    outline: none;
+    color: black;
+}
+
+.EasyMDEContainer {
+    background-color: white;
+    color: black;
+}
+
+.EasyMDEContainer button.table {
+    width: 30px !important;
+}

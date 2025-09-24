@@ -4,7 +4,7 @@ from pathlib import Path
 from bottle import Bottle, run, request, response, HTTPError
 
 from speech_to_text import SpeechToText
-from site_manager import SiteManager
+from site_manager import SiteManager, slugify_to_filename
 
 import logging
 
@@ -149,7 +149,6 @@ def get_page(site_id, page_id):
 @app.post("/api/v1/sites/<site_id>/pages")
 def create_page(site_id):
     data = request.json or {}
-    page_id = data.get("id")
     page_name = data.get("name")
     template = data.get("template", "")
     style = data.get("style", "")
@@ -157,16 +156,11 @@ def create_page(site_id):
     if website_builder_path:
         website_builder_path = urllib.parse.unquote(website_builder_path)
     
-    # Check if site exists and get its pages
-    site = site_manager.get_site_config(site_id)
-    if not site:
-        raise HTTPError(404, "Site not found")
-    
-    success = site_manager.create_page(site_id, page_id, page_name, template, style, website_builder_path)
-    if not success:
+    page_id = site_manager.create_page(site_id, page_name, template, style, website_builder_path)
+    if not page_id:
         raise HTTPError(400, "Failed to create page")
     
-    response = {"page_id": page_id, "created": True}
+    response = {"pageId": page_id, "created": True}
     
     return response
 
@@ -192,7 +186,7 @@ def update_page(site_id, page_id):
     
     return {"updated": True}
 
-@app.get("/api/v1/sites/<site_id>/pages/<page_id>/editor_path")
+@app.get("/api/v1/sites/<site_id>/pages/<page_id>/editorPath")
 def get_page_editor_path(site_id, page_id):
     """Get the absolute file path for a page"""
     site = site_manager.get_site_config(site_id)

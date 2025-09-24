@@ -7,9 +7,23 @@ from typing import Dict, List, Optional
 from pathlib import Path
 import shutil
 import re
+import unicodedata
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def slugify_to_filename(text: str, max_length: int = 16) -> str:
+    # Normalize unicode and remove accents
+    text = unicodedata.normalize("NFD", text)
+    text = text.encode("ascii", "ignore").decode("utf-8")
+
+    # Convert to lowercase and replace non-alphanumeric with hyphens
+    text = re.sub(r'[^a-z0-9]+', '-', text.lower())
+
+    # Strip leading/trailing hyphens and shorten
+    return text.strip('-')[:max_length]
+
 
 class SiteManager:
     def __init__(self, sites_directory="../sites"):
@@ -43,12 +57,6 @@ class SiteManager:
     def get_page_template_path(self, site_id: str, page_id: str) -> Path:
         return self.get_site_path(site_id) / "pages" / f"{page_id}.template"
     
-    def get_page_scripts_dir(self, site_id: str) -> Path:
-        return self.get_site_path(site_id) / "page_mod_scripts"
-    
-    def get_page_script_path(self, site_id: str, script_name: str) -> Path:
-        return self.get_page_scripts_dir(site_id) / script_name
-    
     def list_sites(self) -> List[Dict]:
         sites = []
         if not self.sites_dir.exists():
@@ -69,6 +77,7 @@ class SiteManager:
     
     def get_site_config(self, site_id: str) -> Optional[Dict]:
         config_path = self.get_site_config_path(site_id)
+        logger.info(f"Get site {site_id} config: {config_path}")
         if not config_path.exists():
             return None
 
@@ -90,12 +99,12 @@ class SiteManager:
         editor_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Editor path: {editor_path}")
 
-        # Copy page_mod_scripts directory from ap-website-builder
-        source_scripts_path = Path(website_builder_path) / "page_mod_scripts.js"
-        dest_scripts_path = editor_path / "page_mod_scripts.js"
+        # Copy common directory from ap-website-builder
+        source_scripts_path = Path(website_builder_path) / "common"
+        dest_scripts_path = site_path / "common"
         logger.info(f"source scripts path: {source_scripts_path}")
         logger.info(f"dest scripts path: {dest_scripts_path}")
-        shutil.copy(source_scripts_path, dest_scripts_path)
+        shutil.copytree(source_scripts_path, dest_scripts_path, dirs_exist_ok=True)
 
         # Create site configuration
         site_config = {
@@ -191,15 +200,18 @@ class SiteManager:
         except IOError:
             return None
     
-    def create_page(self, site_id: str, page_id: str, page_name: str, template: str = "", style: str = "", website_builder_path: str = "") -> bool:
-        logger.info(f"CREATING PAGE: {site_id}: {page_id}, {page_name}, {template}, {style}")
+    def create_page(self, site_id: str, page_name: str, template: str = "", style: str = "", website_builder_path: str = "") -> Optional[str]:
+        logger.info(f"CREATING PAGE: {site_id}: {page_name}, {template}, {style}")
 
-        # Add page to site config if not already there
+        # Add page to site config
         site_config = self.get_site_config(site_id)
-        if {page_id: page_name} not in site_config.get("pages", []):
-            site_config["pages"].append({page_id: page_name})
-            site_config["updated_at"] = datetime.now().isoformat()
-            self.update_site_config(site_id, site_config)
+        if not site_config.get("pages"):
+            page_id = 'index'
+        else:
+            page_id = slugify_to_filename(page_name)
+        site_config["pages"].append({page_id: page_name})
+        site_config["updated_at"] = datetime.now().isoformat()
+        self.update_site_config(site_id, site_config)
 
         editor_path: Path = self.get_site_editor_path(site_id)
         try:
@@ -221,10 +233,10 @@ class SiteManager:
             if source_style_path.exists():
                 shutil.copy2(source_style_path, dest_style_path)
 
-            return True
+            return page_id
         except Exception as e:
             logger.exception(e)
-            return False
+            return None
     
     def update_page_content(self, site_id: str, page_id: str, content: str) -> bool:
         # Verify site exists and page is registered
@@ -245,26 +257,27 @@ class SiteManager:
     
     def delete_page(self, site_id: str, page_id: str) -> bool:
         site_config = self.get_site_config(site_id)
-        if not site_config or page_id not in site_config.get("pages", []):
-            return False
         
-        page_path = self.get_page_path(site_id, page_id)
-        template_path = self.get_page_template_path(site_id, page_id)
+        site_editor_path = self.get_site_editor_path(site_id)
         try:
             # Remove from config
-            site_config["pages"].remove(page_id)
+            for i in range(len(site_config["pages"])):
+                page = site_config["pages"][i]
+                curr_id = list(page.keys())[0]
+                if curr_id == page_id:
+                    del site_config["pages"][i]
+                    break
             site_config["updated_at"] = datetime.now().isoformat()
 
             self.update_site_config(site_id, site_config)
 
-            # Remove HTML file
-            if page_path.exists():
-                page_path.unlink()
-
-            # Remove template file
-            if template_path.exists():
-                template_path.unlink()
+            pathlist = Path(site_editor_path).glob(f'**/{page_id}.[a-z]*')
+            logger.info(f"Deleting: {site_editor_path}")
+            for path in pathlist:
+                logger.info(f"  {path}")
+                path.unlink()
             
             return True
         except (OSError, ValueError):
             return False
+

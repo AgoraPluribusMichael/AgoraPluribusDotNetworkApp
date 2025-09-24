@@ -1,5 +1,4 @@
 <!-- @target footer:child -->
-<!-- @param COPYRIGHT_TEXT -->
-<div id="copyright" param="COPYRIGHT_TEXT">
-  &copy; ${COPYRIGHT_TEXT}
+<div id="copyright" class="toggleable">
+  &copy; <span class="editable editable-text"></span>
 </div>

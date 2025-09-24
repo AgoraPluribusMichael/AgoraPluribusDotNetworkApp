@@ -399,20 +399,25 @@ ul {
 
 header {
   padding: 0px 0px 20px 0px;
+  text-align: center;
 }
 
-p {
-  font-size: 16pt;
+.editable {
   color: white;
+}
+
+.editable p {
+  font-size: 16pt;
   text-align: left;
   margin: 0;
   line-height: 1.5;
   padding: 0px 20px 20px 20px;
 }
 
-h1, h2, h3, h4 {
-  color: white;
-  text-align: center;
+.editable button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .no-padding-top {
@@ -694,20 +699,20 @@ table, th, td {
     word-break: break-word;
   }
 
-  p {
+  markdown p {
     font-size: 10pt;
     padding: 0px 12px 12px 12px;
   }
 
-  h1 {
+  markdown h1 {
     font-size: 16pt;
   }
 
-  h2 {
+  markdown h2 {
     font-size: 14pt;
   }
 
-  h3, h4 {
+  markdown h3, h4 {
     font-size: 12pt;
   }
 

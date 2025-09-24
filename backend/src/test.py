@@ -1,6 +1,7 @@
-import site_manager
-
+from pathlib import Path
 if __name__ == "__main__":
-    site_manager_obj = site_manager.SiteManager()
-    page_editor_path = site_manager_obj.get_page_editor_path("2b1ccdcb-c60e-4d67-9692-44b7784eed58", "index")
-    print(page_editor_path)
+    site_editor_path = r"..\sites\418c8faf-3c43-4b29-975c-9af1c20eadf8\editor"
+    page_id = "home"
+    pathlist = Path(site_editor_path).glob(f'**/{page_id}.[a-z]*')
+    for path in pathlist:
+        print(path)
