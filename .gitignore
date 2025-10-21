@@ -188,3 +188,6 @@ cython_debug/
 /.claude
 /.idea
 /backend/sites
+backend/src/episodes.json
+backend/src/worldxppodcast.xml
+/backend/assets

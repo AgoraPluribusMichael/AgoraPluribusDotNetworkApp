@@ -34,6 +34,9 @@ class SiteManager:
         if not self.sites_dir.exists():
             self.sites_dir.mkdir(parents=True, exist_ok=True)
     
+    def get_sites_dir(self):
+        return self.sites_dir
+    
     def get_site_path(self, site_id: str) -> Path:
         return self.sites_dir / site_id
 

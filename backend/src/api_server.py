@@ -1,5 +1,8 @@
 import urllib.parse
 import re
+import os
+import uuid
+import mimetypes
 from pathlib import Path
 from bottle import Bottle, run, request, response, HTTPError
 
@@ -37,7 +40,7 @@ def enable_cors():
     if origin in allowed_origins:
         response.headers['Access-Control-Allow-Origin'] = origin
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
 
 @app.hook('before_request')
 def restrict_to_localhost():
@@ -234,6 +237,57 @@ def create_modification_script(site_id, page_id):
         raise HTTPError(400, "Failed to create modification script")
     
     return {"script_id": script_id, "created": True}
+
+# File Upload Endpoints
+@app.post("/api/v1/sites/uploadFile")
+def upload_file():
+    """Upload a file for Editor.js image tool"""
+    try:
+        # Get the uploaded file
+        upload = request.files.get('file')
+        logger.info(upload)
+        if not upload:
+            raise HTTPError(400, "No file uploaded")
+
+        # Validate file type (images only)
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
+        file_extension = Path(upload.filename).suffix.lower()
+
+        if file_extension not in allowed_extensions:
+            raise HTTPError(400, f"File type not allowed. Allowed types: {', '.join(allowed_extensions)}")
+
+        # Generate unique filename
+        unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+
+        # Create uploads directory for the site
+        uploads_dir = site_manager.get_sites_dir() / ".." / "assets"
+        uploads_dir.mkdir(exist_ok=True)
+
+        # Save the file
+        file_path = uploads_dir / unique_filename
+        upload.save(str(file_path))
+
+        # Generate the URL for the uploaded file
+        file_url = f"../backend/assets/{unique_filename}"
+
+        # Return response in Editor.js expected format
+        return {
+            "success": 1,
+            "file": {
+                "url": file_url,
+                "name": upload.filename,
+                "size": file_path.stat().st_size
+            }
+        }
+
+    except HTTPError:
+        raise
+    except Exception as e:
+        logger.error(f"File upload error: {e}")
+        return {
+            "success": 0,
+            "error": str(e)
+        }
 
 # Components Endpoints
 @app.get("/api/v1/components")
